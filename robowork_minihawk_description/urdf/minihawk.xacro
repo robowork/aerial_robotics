@@ -1,0 +1,1043 @@
+<?xml version="1.0"?>
+<robot name="minihawk_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find robowork_minihawk_description)/urdf/robowork_utils.xacro" />
+
+  <xacro:include filename="$(find robowork_minihawk_description)/urdf/usb_camera_nocollisionvisual.urdf.xacro" />
+
+  <xacro:macro name="minihawk_robot" params="robot_namespace robot_prefix">
+
+    <!-- Map link -->
+    <!-- <link name="map_link" />
+    <joint name="${robot_prefix}map_joint" type="planar">
+      <parent link="map_link" />
+      <child link="${robot_prefix}minihawk_base_link"/>
+    </joint> -->
+
+    <!-- Gazebo plugin for ROS Control -->
+    <gazebo>
+      <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>$(arg robot_namespace)</robotNamespace>
+      </plugin>
+    </gazebo>
+
+    <!-- Publish joint state & tfs from Gazebo (we don't have a MoveIt pipeline) -->
+    <gazebo>
+      <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
+        <robotNamespace>$(arg robot_namespace)</robotNamespace>
+        <jointName>${robot_prefix}imu_joint,${robot_prefix}tilt_base_left_joint,${robot_prefix}tilt_base_right_joint,${robot_prefix}motor_left_joint,${robot_prefix}motor_right_joint,${robot_prefix}motor_rear_joint,${robot_prefix}elevon_left_joint,${robot_prefix}elevon_right_joint</jointName>
+        <updateRate>20</updateRate>
+        <alwaysOn>true</alwaysOn>
+      </plugin>
+    </gazebo>
+
+    <gazebo>
+      <plugin name="${robot_prefix}base_link_p3d_controller" filename="libgazebo_ros_p3d.so">
+        <alwaysOn>true</alwaysOn>
+        <robotNamespace>$(arg robot_namespace)</robotNamespace>
+        <bodyName>${robot_prefix}base_link</bodyName>
+        <topicName>odom</topicName>
+        <updateRate>20.0</updateRate>
+        <gaussianNoise>0.0</gaussianNoise>
+        <frameName>map</frameName>
+        <xyzOffsets>0 0 0</xyzOffsets>
+        <rpyOffsets>0 0 0</rpyOffsets>
+      </plugin>
+    </gazebo>
+
+    <!-- Base Link / Airframe -->
+    <link 
+      name="${robot_prefix}base_link">
+      <inertial>
+        <origin
+          xyz="${-0.043952} -0.00020281 0.020884"
+          rpy="0 0 0" />  <!-- From Solidworks -->
+        <mass
+          value="1.260" /> 
+        <inertia
+          ixx="0.054585"
+          ixy="-4.9142E-06"
+          ixz="8.3664E-05"
+          iyy="0.0089109"
+          iyz="-1.2991E-06"
+          izz="0.063038" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/visual/airframe_v2_1.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/collision/airframe_v2_1.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+    <gazebo reference="${robot_prefix}base_link">
+      <enable_wind>true</enable_wind>
+      <material>Gazebo/White</material>
+      <dampingFactor>0.0</dampingFactor>
+      <maxVel>100.0</maxVel>
+      <minDepth>0.001</minDepth>
+      <mu1>100000.0</mu1>
+      <mu2>100000.0</mu2>
+      <fdir1>1 0 0</fdir1>
+    </gazebo>
+
+    <!-- IMU -->
+    <link 
+      name='${robot_prefix}imu_link'>
+      <inertial>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <mass
+          value="0.15" />
+        <inertia
+          ixx="0.00001"
+          ixy="0"
+          ixz="0"
+          iyy="0.00002"
+          iyz="0"
+          izz="0.00002" />
+      </inertial>
+    </link>
+    <gazebo reference="${robot_prefix}imu_link">
+      <material>Gazebo/Red</material>
+      <dampingFactor>0.0</dampingFactor>
+    </gazebo>
+
+    <joint
+      name='${robot_prefix}imu_joint'
+      type='revolute'>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <parent
+        link="${robot_prefix}base_link" />
+      <child
+        link="${robot_prefix}imu_link" />
+      <axis
+        xyz="0 0 1" />
+      <limit
+        lower="0"
+        upper="0"
+        effort="0"
+        velocity="0" />
+      <!-- <dynamics
+        damping="1.0"
+        friction="0.0" /> -->
+    </joint>
+    <!-- <gazebo reference="${robot_prefix}imu_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo> -->
+
+    <gazebo reference="${robot_prefix}imu_link">
+      <gravity>true</gravity>
+      <sensor name="${robot_prefix}imu_sensor" type="imu">
+        <always_on>true</always_on>
+        <update_rate>1000</update_rate>
+        <visualize>true</visualize>
+        <topic>__default_topic__</topic>
+        <plugin filename="libgazebo_ros_imu_sensor.so" name="${robot_prefix}imu_plugin">
+          <topicName>${robot_prefix}imu</topicName>
+          <bodyName>${robot_prefix}imu_link</bodyName>
+          <updateRateHZ>100.0</updateRateHZ>
+          <gaussianNoise>0.0</gaussianNoise>
+          <xyzOffset>0 0 0</xyzOffset>
+          <rpyOffset>0 0 0</rpyOffset>
+          <frameName>${robot_prefix}imu_link</frameName>
+          <initialOrientationAsReference>false</initialOrientationAsReference>
+        </plugin>
+        <pose>0 0 0 3.141593 0 0</pose>
+      </sensor>
+
+      <!-- <sensor name="${robot_prefix}gps_sensor" type="gps">
+        <pose>0 0 0 0 0 0</pose>
+        <update_rate>5.0</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+      </sensor> -->
+      
+    </gazebo>
+
+    <link 
+      name="${robot_prefix}elevon_left">
+      <inertial>
+        <origin
+          xyz="-0.016695 -0.0078246 -0.0046242"
+          rpy="0 0 0" />
+        <mass
+          value="0.031995" />
+        <inertia
+          ixx="0.00014823"
+          ixy="-2.1683E-06"
+          ixz="-4.102E-07"
+          iyy="3.7582E-06"
+          iyz="-3.489E-06"
+          izz="0.00015162" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/visual/elevon_left_2.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/collision/elevon_left_2.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+    <gazebo reference="${robot_prefix}elevon_left">
+      <material>Gazebo/Yellow</material>
+      <dampingFactor>0.0</dampingFactor>
+    </gazebo>
+
+    <link
+      name="${robot_prefix}elevon_right">
+      <inertial>
+        <origin
+          xyz="-0.016694412474252 0.00780708016092146 -0.00462373768607982"
+          rpy="0 0 0" />
+        <mass
+          value="0.031995066416716" />
+        <inertia
+          ixx="0.00014823038394432"
+          ixy="2.16808957939724E-06"
+          ixz="-4.10153864877624E-07"
+          iyy="3.7579009438246E-06"
+          iyz="3.48789430741058E-06"
+          izz="0.000151624173697509" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/visual/elevon_right_3.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/collision/elevon_right_3.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+    <gazebo reference="${robot_prefix}elevon_right">
+      <material>Gazebo/Yellow</material>
+      <dampingFactor>0.0</dampingFactor>
+    </gazebo>
+    
+    <joint
+      name="${robot_prefix}elevon_left_joint"
+      type="revolute">
+      <origin
+        xyz="-0.11591 0.22 0.017412"
+        rpy="0 0 0" />
+      <parent
+        link="${robot_prefix}base_link" />
+      <child
+        link="${robot_prefix}elevon_left" />
+      <axis
+        xyz="-0.0007333 0.99987 0.016202" />
+      <limit
+        lower="${-pi}"
+        upper="${pi}"
+        effort="-1"
+        velocity="-1" />
+      <dynamics
+        damping="0.004"
+        friction="0.0"/>
+    </joint>
+    <gazebo reference="${robot_prefix}elevon_left_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo>
+		<!-- <transmission name="${robot_prefix}elevon_left_trans" 
+      type="SimpleTransmission">
+			<type>transmission_interface/SimpleTransmission</type>
+			<actuator name="${robot_prefix}elevon_left_motor">
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+			<joint name="${robot_prefix}elevon_left_joint">
+				<hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+			</joint>
+		</transmission> -->
+
+    <joint
+      name="${robot_prefix}elevon_right_joint"
+      type="revolute">
+      <origin
+        xyz="-0.11591 -0.22 0.017412"
+        rpy="0 0 0" />
+      <parent
+        link="${robot_prefix}base_link" />
+      <child
+        link="${robot_prefix}elevon_right" />
+      <axis
+        xyz="-0.00073329 -0.99987 0.016202" />
+      <limit
+        lower="${-pi}"
+        upper="${pi}"
+        effort="-1"
+        velocity="-1" />
+      <dynamics
+        damping="0.004"
+        friction="0.0"/>
+    </joint>
+    <gazebo reference="${robot_prefix}elevon_right_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo>
+		<!-- <transmission name="${robot_prefix}elevon_right_trans" 
+      type="SimpleTransmission">
+			<type>transmission_interface/SimpleTransmission</type>
+			<actuator name="${robot_prefix}elevon_right_motor">
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+			<joint name="${robot_prefix}elevon_right_joint">
+				<hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+			</joint>
+		</transmission> -->
+
+    <link
+      name="${robot_prefix}tilt_base_left">
+      <inertial>
+        <origin
+          xyz="0.011488 0.00092065 -0.011861"
+          rpy="0 0 0" />
+        <mass
+          value="0.0044333" />
+        <inertia
+          ixx="6.2427E-07"
+          ixy="-7.1471E-09"
+          ixz="2.0206E-07"
+          iyy="6.3888E-07"
+          iyz="-3.6525E-09"
+          izz="7.1504E-07" />
+        <!-- <mass
+          value="0.0044333" />
+        <inertia
+          ixx="6.2E-07"
+          ixy="0"
+          ixz="0"
+          iyy="6.3E-07"
+          iyz="0"
+          izz="7.1E-07" /> -->
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/visual/tilt_base_left_6.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/collision/tilt_base_left_6.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+    <gazebo reference="${robot_prefix}tilt_base_left">
+      <material>Gazebo/Yellow</material>
+      <dampingFactor>0.0</dampingFactor>
+    </gazebo>
+
+    <link
+      name="${robot_prefix}tilt_base_right">
+      <inertial>
+        <origin
+          xyz="0.01148775818104 -0.000920893007347656 -0.0118621303719882"
+          rpy="0 0 0" />
+        <mass
+          value="0.00443298460677752" />
+        <inertia
+          ixx="6.24157824751321E-07"
+          ixy="7.14620513533871E-09"
+          ixz="2.02068521423661E-07"
+          iyy="6.38865692774954E-07"
+          iyz="3.66773546790886E-09"
+          izz="7.15011883969272E-07" />
+        <!-- <mass
+          value="0.00443298460677752" />
+        <inertia
+          ixx="6.2E-07"
+          ixy="0"
+          ixz="0"
+          iyy="6.3E-07"
+          iyz="0"
+          izz="7.1E-07" /> -->
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/visual/tilt_base_right_7.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/collision/tilt_base_right_7.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+    <gazebo reference="${robot_prefix}tilt_base_right">
+      <material>Gazebo/Yellow</material>
+      <dampingFactor>0.0</dampingFactor>
+    </gazebo>
+
+    <joint
+      name="${robot_prefix}tilt_base_left_joint"
+      type="revolute">
+      <origin
+        xyz="0.079757 0.12 0.029293"
+        rpy="0 0 0" />
+      <parent
+        link="${robot_prefix}base_link" />
+      <child
+        link="${robot_prefix}tilt_base_left" />
+      <axis
+        xyz="0 -1 0" />
+      <limit
+        lower="${-pi/2}"
+        upper="${+pi/6}"
+        effort="-1"
+        velocity="-1" />
+      <dynamics
+        damping="0.004"
+        friction="0.0"/>
+    </joint>
+    <gazebo reference="${robot_prefix}tilt_base_left_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo>
+		<!-- <transmission name="${robot_prefix}tilt_base_left_trans" 
+      type="SimpleTransmission">
+			<type>transmission_interface/SimpleTransmission</type>
+			<actuator name="${robot_prefix}tilt_base_left_motor">
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+			<joint name="${robot_prefix}tilt_base_left_joint">
+				<hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+			</joint>
+		</transmission> -->
+
+    <joint
+      name="${robot_prefix}tilt_base_right_joint"
+      type="revolute">
+      <origin
+        xyz="0.079757 -0.12 0.029293"
+        rpy="0 0 0" />
+      <parent
+        link="${robot_prefix}base_link" />
+      <child
+        link="${robot_prefix}tilt_base_right" />
+      <axis
+        xyz="0 -1 0" />
+      <limit
+        lower="${-pi/2}"
+        upper="${+pi/6}"
+        effort="-1"
+        velocity="-1" />
+      <dynamics
+        damping="0.004"
+        friction="0.0"/>
+    </joint>
+    <gazebo reference="${robot_prefix}tilt_base_right_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo>
+		<!-- <transmission name="${robot_prefix}tilt_base_right_trans" 
+      type="SimpleTransmission">
+			<type>transmission_interface/SimpleTransmission</type>
+			<actuator name="${robot_prefix}tilt_base_right_motor">
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+			<joint name="${robot_prefix}tilt_base_right_joint">
+				<hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+			</joint>
+		</transmission> -->
+
+    <link
+      name="${robot_prefix}motor_left">
+      <inertial>
+        <!-- <origin
+          xyz="5.6735E-05 -2.8203E-07 ${0.014886-0.0275}"
+          rpy="0 0 0" /> -->
+        <origin
+          xyz="0 0 ${0-0*0.0275}"
+          rpy="0 0 0" />
+        <mass
+          value="0.0097589" />
+        <inertia
+          ixx="1.2266E-06"
+          ixy="4.3016E-10"
+          ixz="2.2499E-09"
+          iyy="1.2201E-06"
+          iyz="5.8639E-12"
+          izz="1.7472E-06" />
+        <!-- <mass
+          value="0.0097589" />
+        <inertia
+          ixx="1.0E-06"
+          ixy="0"
+          ixz="0"
+          iyy="1.0E-06"
+          iyz="0"
+          izz="2.0E-06" /> -->
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 ${0-0.0275}"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/visual/motor_left_8.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <cylinder
+            length="0.005" radius="0.0635" />
+          <!-- <mesh
+            filename="package://robowork_minihawk_description/meshes/collision/motor_left_8.STL" scale="0.001 0.001 0.001" /> -->
+        </geometry>
+      </collision>
+    </link>
+    <gazebo reference="${robot_prefix}motor_left">
+      <material>Gazebo/Grey</material>
+      <dampingFactor>0.0</dampingFactor>
+    </gazebo>
+
+    <link
+      name="${robot_prefix}motor_right">
+      <inertial>
+        <!-- <origin
+          xyz="5.67737959165648E-05 -4.75972763980259E-08 ${0.0148865202445088-0.0275}"
+          rpy="0 0 0" /> -->
+        <origin
+          xyz="0 0 ${0-0*0.0275}"
+          rpy="0 0 0" />
+        <mass
+          value="0.00975898735747096" />
+        <inertia
+          ixx="1.2266537510526E-06"
+          ixy="3.9115367968485E-10"
+          ixz="2.24916927492927E-09"
+          iyy="1.22016049722597E-06"
+          iyz="5.77655688531629E-12"
+          izz="1.74721431804352E-06" />
+        <!-- <mass
+          value="0.00975898735747096" />
+        <inertia
+          ixx="1.0E-06"
+          ixy="0"
+          ixz="0"
+          iyy="1.0E-06"
+          iyz="0"
+          izz="2.0E-06" /> -->
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 ${0-0.0275}"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/visual/motor_right_9.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <cylinder
+            length="0.005" radius="0.0635" />
+          <!-- <mesh
+            filename="package://robowork_minihawk_description/meshes/visual/motor_right_9.STL" scale="0.001 0.001 0.001" /> -->
+        </geometry>
+      </collision>
+    </link>
+    <gazebo reference="${robot_prefix}motor_right">
+      <material>Gazebo/Grey</material>
+      <dampingFactor>0.0</dampingFactor>
+    </gazebo>
+
+    <link
+      name="${robot_prefix}motor_rear">
+      <inertial>
+        <!-- <origin
+          xyz="-5.6724E-05 6.391E-08 ${0.014887-0.0275}"
+          rpy="0 0 0" /> -->
+        <origin
+          xyz="0 0 ${0-0*0.0275}"
+          rpy="0 0 0" />
+        <mass
+          value="0.0097591" />
+        <inertia
+          ixx="1.2267E-06"
+          ixy="3.8043E-10"
+          ixz="-2.2484E-09"
+          iyy="1.2202E-06"
+          iyz="-3.3864E-12"
+          izz="1.7473E-06" />
+        <!-- <mass
+          value="0.0097591" />
+        <inertia
+          ixx="1.0E-06"
+          ixy="0"
+          ixz="0"
+          iyy="1.0E-06"
+          iyz="0"
+          izz="2.0E-06" /> -->
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 ${0-0.0275}"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/visual/motor_rear_5.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <cylinder
+            length="0.005" radius="0.0635" />
+          <mesh
+            filename="package://robowork_minihawk_description/meshes/collision/motor_rear_5.STL" scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+    <gazebo reference="${robot_prefix}motor_rear">
+      <material>Gazebo/Grey</material>
+      <dampingFactor>0.0</dampingFactor>
+    </gazebo>
+
+    <joint
+      name="${robot_prefix}motor_left_joint"
+      type="continuous">
+      <limit
+        lower="-1e+16"
+        upper="1e+16"
+        effort="-1"
+        velocity="-1" />
+      <origin
+        xyz="0.016321 0 ${-0.014786+0.0275}"
+        rpy="0 0.047169 0" />
+      <parent
+        link="${robot_prefix}tilt_base_left" />
+      <child
+        link="${robot_prefix}motor_left" />
+      <axis
+        xyz="0 0 1" />
+      <dynamics
+        damping="0.004"
+        friction="0.0"/>
+    </joint>
+    <gazebo reference="${robot_prefix}motor_left_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo>
+		<!-- <transmission name="${robot_prefix}motor_left_trans" 
+      type="SimpleTransmission">
+			<type>transmission_interface/SimpleTransmission</type>
+			<actuator name="${robot_prefix}motor_left_motor">
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+			<joint name="${robot_prefix}motor_left_joint">
+				<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+			</joint>
+		</transmission> -->
+
+    <joint
+      name="${robot_prefix}motor_right_joint"
+      type="continuous">
+      <limit
+        lower="-1e+16"
+        upper="1e+16"
+        effort="-1"
+        velocity="-1" />
+      <origin
+        xyz="0.016321 0 ${-0.014786+0.0275}"
+        rpy="0 0.047169 0" />
+      <parent
+        link="${robot_prefix}tilt_base_right" />
+      <child
+        link="${robot_prefix}motor_right" />
+      <axis
+        xyz="0 0 1" />
+      <dynamics
+        damping="0.004"
+        friction="0.0"/>
+    </joint>
+    <gazebo reference="${robot_prefix}motor_right_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo>
+  	<!-- <transmission name="${robot_prefix}motor_right_trans" 
+      type="SimpleTransmission">
+			<type>transmission_interface/SimpleTransmission</type>
+			<actuator name="${robot_prefix}motor_right_motor">
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+			<joint name="${robot_prefix}motor_right_joint">
+				<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+			</joint>
+		</transmission> -->
+
+    <joint
+      name="${robot_prefix}motor_rear_joint"
+      type="continuous">
+      <limit
+        lower="-1e+16"
+        upper="1e+16"
+        effort="-1"
+        velocity="-1" />
+      <origin
+        xyz="-0.17004 0 ${0.015349+0.0275}"
+        rpy="0 0.1293 0" />
+      <parent
+        link="${robot_prefix}base_link" />
+      <child
+        link="${robot_prefix}motor_rear" />
+      <axis
+        xyz="0 0 1" />
+      <dynamics
+        damping="0.004"
+        friction="0.0"/>
+    </joint>
+    <gazebo reference="${robot_prefix}motor_rear_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo>
+    <!--<transmission name="${robot_prefix}motor_rear_trans" 
+      type="SimpleTransmission">
+			<type>transmission_interface/SimpleTransmission</type>
+			<actuator name="${robot_prefix}motor_rear_motor">
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+			<joint name="${robot_prefix}motor_rear_joint">
+				<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+			</joint>
+		</transmission>-->
+
+    <gazebo>
+      <plugin name='${robot_prefix}motor_rear_gazebo_model' filename='libgazebo_motor_model.so'>
+        <robotNamespace>$(arg robot_namespace)</robotNamespace>
+        <jointName>${robot_prefix}motor_rear_joint</jointName>
+        <linkName>${robot_prefix}motor_rear</linkName>
+        <turningDirection>ccw</turningDirection>
+        <timeConstantUp>0.0125</timeConstantUp>
+        <timeConstantDown>0.025</timeConstantDown>
+        <maxRotVelocity>5000</maxRotVelocity>
+        <motorConstant>2e-06</motorConstant>
+        <momentConstant>1e-07</momentConstant>
+        <commandSubTopic>/gazebo/command/motor_speed</commandSubTopic>
+        <motorNumber>3</motorNumber>
+        <rotorDragCoefficient>0.0000000806428</rotorDragCoefficient>  <!-- 0.0000806428 -->
+        <rollingMomentCoefficient>1e-09</rollingMomentCoefficient>  <!-- 1e-06 -->
+        <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
+      </plugin>
+      <plugin name='${robot_prefix}motor_left_gazebo_model' filename='libgazebo_motor_model.so'>
+        <robotNamespace>$(arg robot_namespace)</robotNamespace>
+        <jointName>${robot_prefix}motor_left_joint</jointName>
+        <linkName>${robot_prefix}motor_left</linkName>
+        <turningDirection>cw</turningDirection>
+        <timeConstantUp>0.0125</timeConstantUp>
+        <timeConstantDown>0.025</timeConstantDown>
+        <maxRotVelocity>5000</maxRotVelocity>
+        <motorConstant>2e-06</motorConstant>
+        <momentConstant>1e-07</momentConstant>r
+        <commandSubTopic>/gazebo/command/motor_speed</commandSubTopic>
+        <motorNumber>0</motorNumber>
+        <rotorDragCoefficient>0.0000000806428</rotorDragCoefficient>  <!-- 0.0000806428 -->
+        <rollingMomentCoefficient>1e-09</rollingMomentCoefficient>  <!-- 1e-06 -->
+        <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
+      </plugin>
+      <plugin name='${robot_prefix}motor_right_gazebo_model' filename='libgazebo_motor_model.so'>
+        <robotNamespace>$(arg robot_namespace)</robotNamespace>
+        <jointName>${robot_prefix}motor_right_joint</jointName>
+        <linkName>${robot_prefix}motor_right</linkName>
+        <turningDirection>ccw</turningDirection>
+        <timeConstantUp>0.0125</timeConstantUp>
+        <timeConstantDown>0.025</timeConstantDown>
+        <maxRotVelocity>5000</maxRotVelocity>
+        <motorConstant>2e-06</motorConstant>
+        <momentConstant>1e-07</momentConstant>
+        <commandSubTopic>/gazebo/command/motor_speed</commandSubTopic>
+        <motorNumber>1</motorNumber>
+        <rotorDragCoefficient>0.0000000806428</rotorDragCoefficient>  <!-- 0.0000806428 -->
+        <rollingMomentCoefficient>1e-09</rollingMomentCoefficient>  <!-- 1e-06 -->
+        <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
+      </plugin>
+    </gazebo>
+
+    <gazebo>
+      <plugin name="${robot_prefix}wing_left" filename="libLiftDragPlugin.so">
+        <!-- <a0>0.01745</a0>
+        <cla>5.7747</cla>
+        <cda>0.015</cda>
+        <cma>-0.2</cma>
+        <alpha_stall>0.22689</alpha_stall>
+        <cla_stall>-5</cla_stall>
+        <cda_stall>-0.410</cda_stall>
+        <cma_stall>0</cma_stall>
+        <cp>-0.025 0.110 0</cp>
+        <area>0.03</area>
+        <air_density>1.2041</air_density>
+        <forward>1 0 0</forward>
+        <upward>0 0 1</upward>
+        <link_name>${robot_prefix}base_link</link_name>
+        <control_joint_name>${robot_prefix}elevon_left_joint</control_joint_name>
+        <control_joint_rad_to_cl>+0.5</control_joint_rad_to_cl>
+        <windSubTopic>world_wind</windSubTopic> -->
+
+        <robotNamespace>${robot_namespace}</robotNamespace>  <!-- required for PX4's sitl_gazebo version of libLiftDragPlugin.so -->
+
+        <a0>0.05984281113</a0>  <!-- 0.05984281113 -->
+        <cla>4.752798721</cla>  <!-- 4.752798721 -->
+        <cda>0.6417112299</cda>  <!-- 0.6417112299 -->
+        <cma>0.0</cma>  <!-- 0.0 -->
+        <alpha_stall>0.3391428111</alpha_stall>  <!-- 0.3391428111 -->
+        <cla_stall>-3.85</cla_stall>  <!-- -3.85 -->
+        <cda_stall>-0.9233984055</cda_stall>  <!-- -0.9233984055 -->
+        <cma_stall>0</cma_stall>
+        <cp>-0.025 0.3 0.05</cp>  <!-- -0.05 0.3 0.05 -->
+        <area>0.5</area>
+        <air_density>1.2041</air_density>
+        <forward>1 0 0</forward>
+        <upward>0 0 1</upward>
+        <link_name>${robot_prefix}base_link</link_name>
+        <control_joint_name>${robot_prefix}elevon_left_joint</control_joint_name>
+        <control_joint_rad_to_cl>+1.5</control_joint_rad_to_cl>
+        <windSubTopic>world_wind</windSubTopic>
+      </plugin>
+  
+      <plugin name="${robot_prefix}wing_right" filename="libLiftDragPlugin.so">
+        <!-- <a0>0.01745</a0>
+        <cla>5.7747</cla>
+        <cda>0.015</cda>
+        <cma>-0.2</cma>
+        <alpha_stall>0.22689</alpha_stall>
+        <cla_stall>-5</cla_stall>
+        <cda_stall>-0.410</cda_stall>
+        <cma_stall>0</cma_stall>
+        <cp>-0.025 -0.110 0</cp>
+        <area>0.03</area>
+        <air_density>1.2041</air_density>
+        <forward>1 0 0</forward>
+        <upward>0 0 1</upward>
+        <link_name>${robot_prefix}base_link</link_name>
+        <control_joint_name>${robot_prefix}elevon_right_joint</control_joint_name>
+        <control_joint_rad_to_cl>-0.5</control_joint_rad_to_cl>
+        <windSubTopic>world_wind</windSubTopic> -->
+
+        <robotNamespace>${robot_namespace}</robotNamespace>  <!-- required for PX4's sitl_gazebo version of libLiftDragPlugin.so -->
+
+        <a0>0.05984281113</a0>  <!-- 0.05984281113 -->
+        <cla>4.752798721</cla>  <!-- 4.752798721 -->
+        <cda>0.6417112299</cda>  <!-- 0.6417112299 -->
+        <cma>0.0</cma>  <!-- 0.0 -->
+        <alpha_stall>0.3391428111</alpha_stall>  <!-- 0.3391428111 -->
+        <cla_stall>-3.85</cla_stall>  <!-- -3.85 -->
+        <cda_stall>-0.9233984055</cda_stall>  <!-- -0.9233984055 -->
+        <cma_stall>0</cma_stall>
+        <cp>-0.025 -0.3 0.05</cp>  <!-- -0.05 -0.3 0.05 -->
+        <area>0.5</area>
+        <air_density>1.2041</air_density>
+        <forward>1 0 0</forward>
+        <upward>0 0 1</upward>
+        <link_name>${robot_prefix}base_link</link_name>
+        <control_joint_name>${robot_prefix}elevon_right_joint</control_joint_name>
+        <control_joint_rad_to_cl>-1.5</control_joint_rad_to_cl>
+        <windSubTopic>world_wind</windSubTopic>
+      </plugin>
+    </gazebo>
+
+    <gazebo>
+      <plugin name="${robot_prefix}ardupilot_plugin" filename="libArduPilotPlugin.so">
+        <fdm_addr>127.0.0.1</fdm_addr>
+        <fdm_port_in>9002</fdm_port_in>
+        <fdm_port_out>9003</fdm_port_out>
+        <!--
+          Require by APM :
+          Only change model and gazebo from XYZ to XY-Z coordinates
+        -->
+        <modelXYZToAirplaneXForwardZDown>0 0 0 3.141593 0 0</modelXYZToAirplaneXForwardZDown>
+        <gazeboXYZToNED>0 0 0 3.141593 0 0</gazeboXYZToNED>
+        <imuName>${robot_prefix}imu_sensor</imuName>
+        <!-- <gpsName>${robot_prefix}gps_sensor</gpsName> -->
+        <connectionTimeoutMaxCount>5</connectionTimeoutMaxCount>
+
+        <!--
+          incoming control command [0, 1]
+          so offset it by 0 to get [0, 1]
+          and divide max target by 1.
+          offset = 0
+          multiplier = 838 max rpm / 1 = 838
+        -->
+        <!--
+          turningDirection is deprecated. Please use multiplier.
+          Map 'cw' to '-1' and 'ccw' to '1'.
+        -->
+        <control channel="0">
+          <type>VELOCITY</type>
+          <offset>0</offset>
+          <p_gain>0.005</p_gain>
+          <i_gain>0</i_gain>
+          <d_gain>0</d_gain>
+          <i_max>0</i_max>
+          <i_min>0</i_min>
+          <cmd_max>1000.0</cmd_max>
+          <cmd_min>-1000.0</cmd_min>
+          <useForce>1</useForce>
+          <jointName>${robot_prefix}motor_right_joint</jointName>
+          <multiplier>2000</multiplier>
+          <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
+        </control>
+        <control channel="1">
+          <type>VELOCITY</type>
+          <offset>0</offset>
+          <p_gain>0.005</p_gain>
+          <i_gain>0</i_gain>
+          <d_gain>0</d_gain>
+          <i_max>0</i_max>
+          <i_min>0</i_min>
+          <cmd_max>1000.0</cmd_max>
+          <cmd_min>-1000.0</cmd_min>
+          <useForce>1</useForce>
+          <jointName>${robot_prefix}motor_left_joint</jointName>
+          <multiplier>-2000</multiplier>
+          <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
+        </control>
+        <control channel="3">
+          <type>VELOCITY</type>
+          <offset>0</offset>
+          <p_gain>0.005</p_gain>
+          <i_gain>0</i_gain>
+          <d_gain>0</d_gain>
+          <i_max>0</i_max>
+          <i_min>0</i_min>
+          <cmd_max>1000.0</cmd_max>
+          <cmd_min>-1000.0</cmd_min>
+          <useForce>1</useForce>
+          <jointName>${robot_prefix}motor_rear_joint</jointName>
+          <multiplier>3000</multiplier>
+          <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
+        </control>
+
+        <!-- 90  -+1.57079633 -0.0  -1.0  -->
+        <!-- 100 -+1.74532925 -0.1  -0.9 -->
+        <!-- 120 -+2.09439510 -0.25 -0.75  -->
+        <!-- 180 -+3.14159265 -0.3 -0.7  -->
+        <control channel="4">
+          <multiplier>-2.09439510</multiplier>
+          <offset>-0.3</offset>
+          <type>POSITION</type>
+          <p_gain>1.0</p_gain>
+          <i_gain>0</i_gain>
+          <d_gain>0.0</d_gain>
+          <i_max>0</i_max>
+          <i_min>0</i_min>
+          <cmd_max>1.0</cmd_max>
+          <cmd_min>-1.0</cmd_min>
+          <useForce>1</useForce>
+          <jointName>${robot_prefix}tilt_base_left_joint</jointName>
+        </control>
+        <control channel="5">
+          <multiplier>2.09439510</multiplier>
+          <offset>-0.7</offset>
+          <type>POSITION</type>
+          <p_gain>1.0</p_gain>
+          <i_gain>0</i_gain>
+          <d_gain>0.0</d_gain>
+          <i_max>0</i_max>
+          <i_min>0</i_min>
+          <cmd_max>1.0</cmd_max>
+          <cmd_min>-1.0</cmd_min>
+          <useForce>1</useForce>
+          <jointName>${robot_prefix}tilt_base_right_joint</jointName>
+        </control>
+
+        <control channel="6">
+          <multiplier>1.0</multiplier>
+          <offset>-0.5</offset>
+          <type>POSITION</type>
+          <p_gain>1.0</p_gain>
+          <i_gain>0</i_gain>
+          <d_gain>0.0</d_gain>
+          <i_max>0</i_max>
+          <i_min>0</i_min>
+          <cmd_max>1</cmd_max>
+          <cmd_min>-1</cmd_min>
+          <useForce>1</useForce>
+          <jointName>${robot_prefix}elevon_left_joint</jointName>
+        </control>
+        <control channel="7">
+          <multiplier>1.0</multiplier>
+          <offset>-0.5</offset>
+          <type>POSITION</type>
+          <p_gain>1.0</p_gain>
+          <i_gain>0</i_gain>
+          <d_gain>0.0</d_gain>
+          <i_max>0</i_max>
+          <i_min>0</i_min>
+          <cmd_max>1</cmd_max>
+          <cmd_min>-1</cmd_min>
+          <useForce>1</useForce>
+          <jointName>${robot_prefix}elevon_right_joint</jointName>
+        </control>
+
+      </plugin>
+    </gazebo>
+
+    <!-- USB Camera -->
+    <joint name="${robot_prefix}usb_camera_mount_joint" type="fixed">
+      <parent link="${robot_prefix}base_link" />
+      <child link="${robot_prefix}usb_camera_link" />
+      <origin xyz="0.073591584 0 -0.031723299" rpy="0 ${pi/2} 0" /> #From: Solidworks
+    </joint>
+    <xacro:usb_camera frame="${robot_prefix}usb_camera_link" name="${robot_prefix}usb_camera"
+     camera_x="0.0195" camera_y="0.044" camera_z="0.035" camera_mass="0.050"
+     hfov="1.0471975512" near="0.05" far="300" format="R8G8B8" fps="10" width="1280" height="720"/> #format="L8"
+    <gazebo reference="${robot_prefix}usb_camera_link">
+      <material>Gazebo/DarkGrey</material>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>
+

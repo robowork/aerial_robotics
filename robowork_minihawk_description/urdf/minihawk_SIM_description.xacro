@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<robot name="minihawk_SIM" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:arg name="robot_namespace" default=""/>
+  <xacro:arg name="robot_prefix" default=""/>
+
+  <!-- Vehicle -->
+  <xacro:include filename="$(find robowork_minihawk_description)/urdf/minihawk.xacro" />
+
+  <!-- Instantiate -->
+  <xacro:minihawk_robot
+         robot_namespace="$(arg robot_namespace)"
+         robot_prefix="$(arg robot_prefix)">
+  </xacro:minihawk_robot>
+
+</robot>
+

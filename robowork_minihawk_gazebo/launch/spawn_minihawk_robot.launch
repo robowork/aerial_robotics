@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="gazebo_odometry" default="true"/>
+
+  <arg name="robot_initial_joint_states" default=""/> #""
+
+  <arg name="robot_namespace" default="minihawk_SIM"/> #""
+  <arg name="robot_prefix" default="MH_"/> #""
+
+  <arg name="tf_prefix" default=""/>
+  <arg name="sim_suffix" default="_SIM"/> #""
+
+  <arg name="minihawk_joint_controllers" default="
+                $(arg robot_namespace)_joint_state_controller
+                "/>  
+                # $(arg robot_namespace)_joint_state_controller
+                # $(arg robot_namespace)_joint_position_controller 
+                # $(arg robot_namespace)_joint_velocity_controller
+
+  <arg name="robot_initial_x" default="0.0"/>
+  <arg name="robot_initial_y" default="0.0"/>
+  <arg name="robot_initial_z" default="0.0"/>
+  <arg name="robot_initial_yaw" default="0.0"/>
+
+  <!-- Minihawk -->
+  <group ns="$(arg robot_namespace)">
+
+    <!-- The name of the parameter under which the URDF is loaded -->
+    <arg name="robot_description" default="robot_description"/>
+
+    <!-- Load universal robot description format (URDF) -->
+    <param name="$(arg robot_description)"
+           command="$(find xacro)/xacro --inorder '$(find robowork_minihawk_description)/urdf/$(arg robot_namespace)_description.xacro'
+                    robot_namespace:=$(arg robot_namespace)
+                    robot_prefix:=$(arg robot_prefix)" />
+
+    <!-- (Kill and re -if necessary-)Start robot_state_publisher with the new parameter server configuration -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+      <param name="tf_prefix" value="$(arg tf_prefix)"/>
+    </node>
+
+    <!-- Control -->
+      <!-- ROS Control params  -->
+      <rosparam command="load" file="$(find robowork_minihawk_launch)/config/$(arg robot_namespace)_joint_controllers.yaml" />
+
+      <!-- ROS Control params for MiniHawk -->
+      <rosparam command="load" file="$(find robowork_minihawk_control)/config/$(arg robot_namespace)_control.yaml" />
+
+      <arg name="gazebo_start_delay" default="0.0" />
+      <node name="listener" pkg="roscpp_tutorials" type="listener"  />
+      <node name="$(arg robot_namespace)_base_controller_spawner" pkg="controller_manager" type="spawner"
+            args="$(arg minihawk_joint_controllers)"
+            launch-prefix="bash -c 'sleep $(arg gazebo_start_delay); $0 $@' "/>
+
+    <!--Teleop -->
+    
+    <!-- Localization -->
+    <node name="$(arg robot_namespace)_odom_message_to_tf" pkg="message_to_tf" type="message_to_tf" output="log">
+      <param name="odometry_topic" value="odom" />
+      <param name="footprint_frame_id" value="" />
+      <param name="stabilized_frame_id" value="" />
+    </node>
+
+    <!-- Perception -->
+    <include file="$(find robowork_minihawk_perception)/launch/apriltag_detection.launch">
+      <arg name="robot_namespace" value="$(arg robot_namespace)"/>
+      <arg name="sim_suffix" value="$(arg sim_suffix)"/>
+      <arg name="camera_name" value="$(arg robot_prefix)usb_camera"/>
+      <arg name="camera_frame" value="$(arg robot_prefix)usb_camera_link_optical"/>
+      <arg name="image_topic" value="$(arg robot_prefix)usb_camera/image_raw" /> #gazebo image comes undistorted
+      <arg name="info_topic" value="$(arg robot_prefix)usb_camera/camera_info" />
+    </include>
+
+    <!-- Navigation -->
+
+    <!-- Customization -->
+
+    <!-- Spawn gazebo model -->
+    <node name="spawn_$(arg robot_namespace)_model" pkg="gazebo_ros" type="spawn_model"
+          args="-x $(arg robot_initial_x)
+                -y $(arg robot_initial_y)
+                -z $(arg robot_initial_z)
+                -Y $(arg robot_initial_yaw)
+                -urdf
+                -param robot_description
+                -model $(arg robot_namespace) $(arg robot_initial_joint_states)
+                -unpause" /> #-unpause
+  </group>
+
+</launch>

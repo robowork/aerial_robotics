@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package>
+  <name>robowork_minihawk_description</name>
+  <version>0.0.0</version>
+  <description>RoboWork MiniHawk URDF description</description>
+  <author email="papachric@gmail.com"> Christos Papachristos</author>
+  <maintainer email="papachric@gmail.com">Christos Papachristos</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>robot_state_publisher</run_depend>
+  <run_depend>urdf</run_depend>
+  <run_depend>xacro</run_depend>
+
+</package>

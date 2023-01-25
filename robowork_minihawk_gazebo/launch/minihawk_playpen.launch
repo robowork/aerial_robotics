@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="robot_namespace" default="minihawk_SIM"/>
+
+  <arg name="robot_initial_x" default="0.0"/>
+  <arg name="robot_initial_y" default="0.0"/>
+  <arg name="robot_initial_z" default="0.2185"/>
+  <arg name="robot_initial_yaw" default="0.0"/>
+
+  <arg name="pi" value="3.14159265358979"/>
+  <arg name="motor_rear_joint" value="$(eval 0.0)"/>
+  <arg name="elevon_left_joint" value="$(eval 0.0)"/>
+  <arg name="elevon_right_joint" value="$(eval 0.0)"/> 
+  <arg name="tilt_base_left_joint" value="$(eval 0.0*pi/2)"/>
+  <arg name="tilt_base_right_joint" value="$(eval 0.0*pi/2)"/>
+  <arg name="motor_left_joint" value="$(eval 0.0)"/>
+  <arg name="motor_right_joint" value="$(eval 0.0)"/>
+
+  <arg name="robot_initial_joint_states"
+    default="-J minihawk/MH_motor_rear_joint $(arg motor_rear_joint)
+             -J minihawk/MH_elevon_left_joint $(arg elevon_left_joint)
+             -J minihawk/MH_elevon_right_joint $(arg elevon_right_joint)
+             -J minihawk/MH_tilt_base_left_joint $(arg tilt_base_left_joint)
+             -J minihawk/MH_tilt_base_right_joint $(arg tilt_base_right_joint)
+             -J minihawk/MH_motor_left_joint $(arg motor_left_joint)
+             -J minihawk/MH_motor_right_joint $(arg motor_right_joint)"/>
+
+  <arg name="world_name" default="$(find robowork_minihawk_gazebo)/worlds/minihawk_playpen.world"/>
+
+  <include file="$(find robowork_minihawk_gazebo)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world_name)"/>
+    <arg name="paused" value="true"/>
+    <arg name="physics" value="ode"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+    #### Handle gazebo node topic remappings as extra args to gazebo e.g.: /compliance_controller/compliance_velocity_adjustment:=/$(arg robot_namespace)/$(arg arm_namespace)compliance_controller/compliance_velocity_adjustment
+    #--verbose 
+    <arg name="extra_gazebo_args" value="--verbose"/> 
+  </include>
+
+  <include file="$(find robowork_minihawk_gazebo)/launch/spawn_minihawk_robot.launch">
+    <arg name="robot_namespace" value="$(arg robot_namespace)"/>
+    <arg name="robot_initial_x" value="$(arg robot_initial_x)"/>
+    <arg name="robot_initial_y" value="$(arg robot_initial_y)"/>
+    <arg name="robot_initial_z" value="$(arg robot_initial_z)"/>
+    <arg name="robot_initial_yaw" value="$(arg robot_initial_yaw)"/>
+    <arg name="robot_initial_joint_states" value="$(arg robot_initial_joint_states)"/>
+  </include>
+
+</launch>
