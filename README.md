@@ -10,7 +10,8 @@ ros-melodic-apriltag \
 ros-melodic-apriltag-ros \
 libgstreamer-plugins-base1.0-dev \
 python3-numpy \
-python3-jinja2
+python3-jinja2 \
+python-pexpect
 ```
 
 ## Setup and Build
