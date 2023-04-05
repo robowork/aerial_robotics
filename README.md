@@ -7,7 +7,10 @@ ros-melodic-libmavconn \
 ros-melodic-mavros \
 ros-melodic-mavros-msgs \
 ros-melodic-apriltag \
-ros-melodic-apriltag-ros
+ros-melodic-apriltag-ros \
+libgstreamer-plugins-base1.0-dev \
+python3-numpy \
+python3-jinja2
 ```
 
 ## Setup and Build
