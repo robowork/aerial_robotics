@@ -30,6 +30,7 @@ catkin build
 cd $HOME/aerial_robotics_ws && git clone --recursive https://github.com/ArduPilot/ardupilot && cd ardupilot
 git checkout Plane-4.2
 ./Tools/gittools/submodule-sync.sh
+./Tools/environment_install/install-prereqs-ubuntu.sh
 
 cd $HOME/aerial_robotics_ws && git clone --recursive https://github.com/khancyr/ardupilot_gazebo && cd ardupilot_gazebo
 mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
