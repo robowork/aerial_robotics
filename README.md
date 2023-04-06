@@ -15,7 +15,8 @@ python-pexpect \
 python-pip
 
 pip install \
-pymavlink
+pymavlink \
+monotonic
 ```
 
 ## Setup and Build
