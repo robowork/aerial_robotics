@@ -11,7 +11,11 @@ ros-melodic-apriltag-ros \
 libgstreamer-plugins-base1.0-dev \
 python3-numpy \
 python3-jinja2 \
-python-pexpect
+python-pexpect \
+python-pip
+
+pip install \
+pymavlink
 ```
 
 ## Setup and Build
