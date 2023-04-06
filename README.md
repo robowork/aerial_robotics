@@ -17,6 +17,8 @@ python-pip
 pip install \
 pymavlink \
 monotonic
+
+sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh
 ```
 
 ## Setup and Build
