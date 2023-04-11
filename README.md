@@ -7,7 +7,18 @@ ros-melodic-libmavconn \
 ros-melodic-mavros \
 ros-melodic-mavros-msgs \
 ros-melodic-apriltag \
-ros-melodic-apriltag-ros
+ros-melodic-apriltag-ros \
+libgstreamer-plugins-base1.0-dev \
+python3-numpy \
+python3-jinja2 \
+python-pexpect \
+python-pip
+
+pip install \
+pymavlink \
+monotonic
+
+sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh
 ```
 
 ## Setup and Build
@@ -24,6 +35,7 @@ git clone --recursive -b master https://github.com/robowork/aerial_robotics
 cd $HOME/aerial_robotics_ws && git clone --recursive https://github.com/ArduPilot/ardupilot && cd ardupilot
 git checkout Plane-4.2
 ./Tools/gittools/submodule-sync.sh
+./Tools/environment_install/install-prereqs-ubuntu.sh -y
 
 # Apply some patches and extra files
 cd $HOME/aerial_robotics_ws/ardupilot
