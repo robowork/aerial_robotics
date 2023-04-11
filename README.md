@@ -18,9 +18,17 @@ cd $HOME/aerial_robotics_ws
 catkin config -DCMAKE_BUILD_TYPE=Release
 catkin build
 
+cd $HOME/aerial_robotics_ws/src
+git clone --recursive -b master https://github.com/robowork/aerial_robotics
+
 cd $HOME/aerial_robotics_ws && git clone --recursive https://github.com/ArduPilot/ardupilot && cd ardupilot
 git checkout Plane-4.2
 ./Tools/gittools/submodule-sync.sh
+
+# Apply some patches and extra files
+cd $HOME/aerial_robotics_ws/ardupilot
+patch -p0 < ../src/aerial_robotics/deps/vehicleinfo_py.patch 
+cp ../src/aerial_robotics/deps/ArduPlane_MiniHawk_Gazebo.parm ./Tools/autotest/default_params
 
 cd $HOME/aerial_robotics_ws && git clone --recursive https://github.com/khancyr/ardupilot_gazebo && cd ardupilot_gazebo
 mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -44,9 +52,6 @@ export GAZEBO_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/gazebo-9/plugins:${GAZEBO_PL
 export GAZEBO_MODEL_PATH=/usr/share/mavlink_sitl_gazebo/models:${GAZEBO_MODEL_PATH}
 export GAZEBO_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/mavlink_sitl_gazebo/plugins:${GAZEBO_PLUGIN_PATH}
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${GAZEBO_PLUGIN_PATH}
-
-cd $HOME/aerial_robotics_ws/src
-git clone --recursive -b master https://github.com/robowork/aerial_robotics
 
 cd $HOME/aerial_robotics_ws
 catkin build

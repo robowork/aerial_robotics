@@ -1,0 +1,18 @@
+diff --git Tools/autotest/pysim/vehicleinfo.py Tools/autotest/pysim/vehicleinfo.py
+index 684bd3ee0b..a0b7448086 100644
+--- Tools/autotest/pysim/vehicleinfo.py
++++ Tools/autotest/pysim/vehicleinfo.py
+@@ -222,6 +222,15 @@ class VehicleInfo(object):
+         "default_frame": "plane",
+         "frames": {
+             # PLANE
++
++
++            # GAZEBO SIM
++            "gazebo-minihawk": {
++                "waf_target": "bin/arduplane",
++                "default_params_filename": "default_params/ArduPlane_MiniHawk_Gazebo.parm",
++            },
++
++
+             "quadplane-tilttri": {
