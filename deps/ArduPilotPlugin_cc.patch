@@ -1,0 +1,36 @@
+diff --git src/ArduPilotPlugin.cc src/ArduPilotPlugin.cc
+index 1f06129..7ceac5c 100755
+--- src/ArduPilotPlugin.cc
++++ src/ArduPilotPlugin.cc
+@@ -379,6 +379,8 @@ ArduPilotPlugin::ArduPilotPlugin()
+ {
+   this->dataPtr->arduPilotOnline = false;
+   this->dataPtr->connectionTimeoutCount = 0;
++  this->initDelayCounter = 0;
++  this->initDelayCounterLimit = 750;
+ }
+ 
+ /////////////////////////////////////////////////
+@@ -851,8 +853,14 @@ void ArduPilotPlugin::OnUpdate()
+     this->ReceiveMotorCommand();
+     if (this->dataPtr->arduPilotOnline)
+     {
++      if (initDelayCounter < initDelayCounterLimit) {
++        // gzerr << "initDelayCounter: " << initDelayCounter << "\n";
++        if (++initDelayCounter >= initDelayCounterLimit) { gzwarn << "READY\n"; }
++      }
++      else {
+       this->ApplyMotorForces((curTime -
+         this->dataPtr->lastControllerUpdateTime).Double());
++      }
+       this->SendState();
+     }
+   }
+@@ -1032,6 +1040,7 @@ void ArduPilotPlugin::ReceiveMotorCommand()
+         gzwarn << "[" << this->dataPtr->modelName << "] "
+                << "Broken ArduPilot connection, resetting motor control.\n";
+         this->ResetPIDs();
++        this->initDelayCounter = 0;
+       }
+     }
+   }

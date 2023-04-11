@@ -46,6 +46,12 @@ cd $HOME/aerial_robotics_ws && git clone --recursive https://github.com/khancyr/
 mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j 12 && sudo make install
 
+# Apply some patches and rebuild
+cd $HOME/aerial_robotics_ws/ardupilot_gazebo
+patch -p0 < ../src/aerial_robotics/deps/ArduPilotPlugin_hh.patch
+patch -p0 < ../src/aerial_robotics/deps/ArduPilotPlugin_cc.patch
+cd build && make -j 12 && sudo make install
+
 cd $HOME/aerial_robotics_ws && git clone --recursive https://github.com/PX4/sitl_gazebo.git && cd sitl_gazebo
 git checkout 1b56329b73f68f1480e58b1137b3e5169c7453d1
 mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..

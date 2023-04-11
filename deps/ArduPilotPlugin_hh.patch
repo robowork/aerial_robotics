@@ -1,0 +1,17 @@
+diff --git include/ArduPilotPlugin.hh include/ArduPilotPlugin.hh
+index b449cac..86d24cf 100755
+--- include/ArduPilotPlugin.hh
++++ include/ArduPilotPlugin.hh
+@@ -91,6 +91,12 @@ namespace gazebo
+ 
+     /// \brief transform from world frame to NED frame
+     private: ignition::math::Pose3d gazeboXYZToNED;
++
++    /// \brief initialization delay to prevent actuator impulse thrusting bug
++    private: uint initDelayCounter;
++
++    /// \brief initialization delay counter limit, at this point impulse will not appear
++    private: uint initDelayCounterLimit;
+   };
+ }
+ #endif
