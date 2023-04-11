@@ -105,7 +105,7 @@
       <static>1</static>
       <link name='office_link'>
         <collision name='collision'>
-          <pose frame=''>1000 -500 0 0 0 0</pose>
+          <pose frame=''>750 50 0 0 0 0</pose>
           <geometry>
             <mesh>
               <uri>model://office_building/meshes/office_building.dae</uri>
@@ -126,7 +126,7 @@
           </surface>
         </collision>
         <visual name='visual'>
-          <pose frame=''>1000 -500 0 0 0 0</pose>
+          <pose frame=''>750 50 0 0 0 0</pose>
           <geometry>
             <mesh>
               <uri>model://office_building/meshes/office_building.dae</uri>
@@ -135,7 +135,7 @@
         </visual>
 
         <visual name='apriltag_Visual'>
-          <pose frame=''>1000.0 -500.0 18.215 0.0 -0 0</pose>
+          <pose frame=''>750 50 18.215 0.0 -0 0</pose>
           <geometry>
             <box>
               <size>8.9 8.9 0.001</size>
