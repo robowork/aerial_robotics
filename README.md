@@ -71,6 +71,9 @@ export GAZEBO_MODEL_PATH=/usr/share/mavlink_sitl_gazebo/models:${GAZEBO_MODEL_PA
 export GAZEBO_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/mavlink_sitl_gazebo/plugins:${GAZEBO_PLUGIN_PATH}
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${GAZEBO_PLUGIN_PATH}
 
+# Copy gazebo models to gazebo resources user folder
+cp -r $HOME/aerial_robotics_ws/src/aerial_robotics/robowork_minihawk_gazebo/models/* $HOME/.gazebo/models/
+
 cd $HOME/aerial_robotics_ws
 catkin build
 ```
