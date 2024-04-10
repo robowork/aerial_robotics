@@ -4,6 +4,7 @@
 ```
 sudo apt-get install \
 ros-melodic-libmavconn \
+ros-melodic-message-to-tf \
 ros-melodic-mavros \
 ros-melodic-mavros-msgs \
 ros-melodic-apriltag \
@@ -14,8 +15,8 @@ python3-jinja2 \
 python-pexpect \
 python-pip
 
-pip install \
-pymavlink \
+pip install --force-reinstall --no-cache-dir \
+mavproxy==1.8.49 \
 monotonic
 
 sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh
