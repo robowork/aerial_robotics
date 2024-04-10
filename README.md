@@ -15,9 +15,17 @@ python3-jinja2 \
 python-pexpect \
 python-pip
 
-pip install --force-reinstall --no-cache-dir \
+pip install \
 mavproxy==1.8.49 \
 monotonic
+
+# Verify you have mavproxy version 1.8.49 installed
+pip show mavproxy
+
+# If you have a different (higher) version, your pip cache might be the issue, so in this case
+pip cache purge
+pip install --force-reinstall mavproxy==1.8.49
+pip show mavproxy
 
 sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh
 ```
