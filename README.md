@@ -19,10 +19,10 @@ pip install \
 mavproxy==1.8.49 \
 monotonic
 
-# Verify you have mavproxy version 1.8.49 installed
+# [MAVProxy Version: Verify you have mavproxy version 1.8.49 installed]
 pip show mavproxy
 
-# If you have a different (higher) version, your pip cache might be the issue, so in this case
+# [MAVProxy Version: If you still have a different (higher) version, your pip cache might be the issue]
 pip cache purge
 pip install --force-reinstall mavproxy==1.8.49
 pip show mavproxy
@@ -46,6 +46,13 @@ git checkout Plane-4.2
 ./Tools/gittools/submodule-sync.sh
 ./Tools/environment_install/install-prereqs-ubuntu.sh -y
 
+# The last command will pull the newest mavproxy version, higher than the one that is known to work with the Plane-4.2 stack so we will have to downgrade
+pip install mavproxy==1.8.49
+
+# Again, verify you now have mavproxy version 1.8.49 by following the previous section's steps:
+# [MAVProxy Version: Verify you have mavproxy version 1.8.49 installed]
+# [MAVProxy Version: If you still have a different (higher) version, your pip cache might be the issue]
+
 # Apply some patches and extra files
 cd $HOME/aerial_robotics_ws/ardupilot
 patch -p0 < ../src/aerial_robotics/deps/vehicleinfo_py.patch 
@@ -62,7 +69,7 @@ patch -p0 < ../src/aerial_robotics/deps/ArduPilotPlugin_cc.patch
 cd build && make -j 12 && sudo make install
 
 cd $HOME/aerial_robotics_ws && git clone --recursive https://github.com/PX4/sitl_gazebo.git && cd sitl_gazebo
-git checkout 1b56329b73f68f1480e58b1137b3e5169c7453d1
+git checkout 9343aaf4e275db48fce02dd25c5bd8273c2d583a
 mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j 12 && sudo make install
 
