@@ -125,7 +125,12 @@ rosservice call /minihawk_SIM/mavros/cmd/takeoff "{min_pitch: 0.0, yaw: 0.0, lat
 rosservice call /minihawk_SIM/mavros/set_mode "custom_mode: 'AUTO'"
 rosservice call /minihawk_SIM/mavros/cmd/arming True   ###Required if the mission hasn't started yet### 
 
-### Try switching between some Quadplane modes ###
+### Once the vehicle reaches its final waypoint (over the building) the camera will be looking at an apriltag marker  ###
+
+[Observe ROS topic output of apriltag_ros node in new terminal 3 (relative pose in camera frame coordinates with respect to detected apriltag marker)]:
+rostopic echo /minihawk_SIM/MH_usb_camera_link_optical/tag_detections
+
+### Try switching between some Quadplane modes and control the aircraft motion ###
 
 # https://ardupilot.org/plane/docs/qloiter-mode.html#qloiter-mode
 [Publish ROS topic in new terminal 3 (this is required to virtually center the rc sticks, 4 first channels are 0:roll(-left,+right), 1:pitch(-up,+down), 2:throttle(-down,+up), 3:yaw(-left,+right))]:
