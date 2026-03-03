@@ -19,6 +19,7 @@ python-pexpect \
 python-pip
 
 pip install \
+pymavlink==2.4.42 \
 mavproxy==1.8.49 \
 monotonic
 
